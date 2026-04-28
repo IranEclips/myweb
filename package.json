@@ -1,0 +1,7 @@
+{
+  "name": "iraneclips-tunnel",
+  "version": "1.0.0",
+  "description": "IranEclips Tunnel — Vercel Edge XHTTP relay tunnel compatible with Xray/V2Ray",
+  "private": true,
+  "license": "MIT"
+}
