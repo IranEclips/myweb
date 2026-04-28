@@ -1,66 +1,87 @@
-export const config = { runtime: "edge" };
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+
+export const config = {
+  api: { bodyParser: false },
+  supportsResponseStreaming: true,
+};
+
 
 const TARGET_BASE = (process.env.TARGET_DOMAIN || "").replace(/\/$/, "");
+const SECRET_KEY = process.env.SECRET_KEY || "my-default-secret"; 
 
-const STRIP_HEADERS = new Set([
-  "host",
-  "connection",
-  "keep-alive",
-  "proxy-authenticate",
-  "proxy-authorization",
-  "te",
-  "trailer",
-  "transfer-encoding",
-  "upgrade",
-  "forwarded",
-  "x-forwarded-host",
-  "x-forwarded-proto",
-  "x-forwarded-port",
+
+const BANNED_HEADERS = new Set([
+  "host", "connection", "keep-alive", "proxy-authenticate", 
+  "proxy-authorization", "te", "trailer", "transfer-encoding", 
+  "upgrade", "forwarded", "x-forwarded-host", "x-forwarded-proto", 
+  "x-forwarded-port", "x-vercel-id", "x-vercel-cache", "x-vercel-forwarded-for"
 ]);
 
-export default async function handler(req) {
+export default async function handler(req, res) {
+ 
   if (!TARGET_BASE) {
-    return new Response("Misconfigured: TARGET_DOMAIN is not set", {
-      status: 500,
-    });
+    res.statusCode = 500;
+    return res.end("Configuration Error: TARGET_DOMAIN is missing.");
   }
 
   try {
-    const pathStart = req.url.indexOf("/", 8);
-    const targetUrl =
-      pathStart === -1
-        ? TARGET_BASE + "/"
-        : TARGET_BASE + req.url.slice(pathStart);
+    const headers = {};
+    const clientKey = req.headers["x-access-key"]; 
 
-    const out = new Headers();
-    let clientIp = null;
-    for (const [k, v] of req.headers) {
-      if (STRIP_HEADERS.has(k)) continue;
-      if (k.startsWith("x-vercel-")) continue;
-      if (k === "x-real-ip") {
-        clientIp = v;
-        continue;
-      }
-      if (k === "x-forwarded-for") {
-        if (!clientIp) clientIp = v;
-        continue;
-      }
-      out.set(k, v);
+   
+    if (clientKey !== SECRET_KEY) {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.statusCode = 200;
+      return res.end(`
+        <!DOCTYPE html>
+        <html>
+          <head><title>Under Construction</title></head>
+          <body style="font-family:sans-serif; text-align:center; padding-top:50px;">
+            <h1>Maintenance Mode</h1>
+            <p>Our website is currently undergoing scheduled maintenance.</p>
+          </body>
+        </html>
+      `);
     }
-    if (clientIp) out.set("x-forwarded-for", clientIp);
 
-    const method = req.method;
-    const hasBody = method !== "GET" && method !== "HEAD";
+   
+    for (const [key, value] of Object.entries(req.headers)) {
+      const k = key.toLowerCase();
+      if (BANNED_HEADERS.has(k) || k.startsWith("x-vercel-")) continue;
+      headers[k] = Array.isArray(value) ? value.join(", ") : value;
+    }
 
-    return await fetch(targetUrl, {
-      method,
-      headers: out,
-      body: hasBody ? req.body : undefined,
+ 
+    const targetUrl = TARGET_BASE + req.url;
+    
+  
+    const response = await fetch(targetUrl, {
+      method: req.method,
+      headers,
+      body: req.method !== "GET" && req.method !== "HEAD" ? Readable.toWeb(req) : null,
       duplex: "half",
-      redirect: "manual",
+      redirect: "manual"
     });
+
+  
+    res.statusCode = response.status;
+    for (const [k, v] of response.headers) {
+      if (k.toLowerCase() === "transfer-encoding") continue;
+      try { res.setHeader(k, v); } catch (e) {}
+    }
+
+    if (response.body) {
+      await pipeline(Readable.fromWeb(response.body), res);
+    } else {
+      res.end();
+    }
+
   } catch (err) {
-    console.error("relay error:", err);
-    return new Response("Bad Gateway: Tunnel Failed", { status: 502 });
+    console.error("Tunnel Error:", err);
+    if (!res.headersSent) {
+      res.statusCode = 502;
+      res.end("Bad Gateway: Connection to origin failed.");
+    }
   }
 }
