@@ -8,54 +8,62 @@ export const config = {
 
 
 const TARGET_BASE = (process.env.TARGET_DOMAIN || "").replace(/\/$/, "");
-const SECRET_KEY = process.env.SECRET_KEY || "my-default-secret"; 
 
+const SECRET_KEY = process.env.SECRET_KEY || "iran eclips"; 
 
 const BANNED_HEADERS = new Set([
   "host", "connection", "keep-alive", "proxy-authenticate", 
   "proxy-authorization", "te", "trailer", "transfer-encoding", 
   "upgrade", "forwarded", "x-forwarded-host", "x-forwarded-proto", 
-  "x-forwarded-port", "x-vercel-id", "x-vercel-cache", "x-vercel-forwarded-for"
+  "x-forwarded-port"
 ]);
 
 export default async function handler(req, res) {
- 
   if (!TARGET_BASE) {
     res.statusCode = 500;
-    return res.end("Configuration Error: TARGET_DOMAIN is missing.");
+    return res.end("Error: TARGET_DOMAIN is not set in Vercel Environment Variables.");
   }
 
   try {
-    const headers = {};
-    const clientKey = req.headers["x-access-key"]; 
+    const clientKey = req.headers["x-access-key"];
 
-   
+    
     if (clientKey !== SECRET_KEY) {
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.statusCode = 200;
       return res.end(`
         <!DOCTYPE html>
-        <html>
-          <head><title>Under Construction</title></head>
-          <body style="font-family:sans-serif; text-align:center; padding-top:50px;">
-            <h1>Maintenance Mode</h1>
-            <p>Our website is currently undergoing scheduled maintenance.</p>
+        <html lang="fa" dir="rtl">
+          <head>
+            <title>Iran Eclips | ?? ??? ?????</title>
+            <style>
+              body { background: #0a0a0a; color: #00d2ff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+              .container { text-align: center; border: 1px solid #333; padding: 40px; border-radius: 15px; box-shadow: 0 0 20px rgba(0, 210, 255, 0.2); }
+              h1 { font-size: 2.5rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+              p { color: #888; font-size: 1.1rem; }
+              .neon { text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1 class="neon">Iran Eclips</h1>
+              <p>??? ????? ?? ??? ??????????? ???????. ????? ????? ?????? ????.</p>
+            </div>
           </body>
         </html>
       `);
     }
 
-   
+  
+    const headers = {};
     for (const [key, value] of Object.entries(req.headers)) {
       const k = key.toLowerCase();
       if (BANNED_HEADERS.has(k) || k.startsWith("x-vercel-")) continue;
       headers[k] = Array.isArray(value) ? value.join(", ") : value;
     }
 
- 
     const targetUrl = TARGET_BASE + req.url;
     
-  
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
@@ -64,7 +72,6 @@ export default async function handler(req, res) {
       redirect: "manual"
     });
 
-  
     res.statusCode = response.status;
     for (const [k, v] of response.headers) {
       if (k.toLowerCase() === "transfer-encoding") continue;
@@ -78,10 +85,10 @@ export default async function handler(req, res) {
     }
 
   } catch (err) {
-    console.error("Tunnel Error:", err);
+    console.error("Relay Error:", err);
     if (!res.headersSent) {
       res.statusCode = 502;
-      res.end("Bad Gateway: Connection to origin failed.");
+      res.end("Bad Gateway");
     }
   }
 }
