@@ -1,9 +1,9 @@
 {
-  "name": "eclips-edge-proxy",
-  "version": "1.1.0",
+  "name": "edge-traffic-optimizer",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo build done"
+    "build": "echo build complete"
   }
 }

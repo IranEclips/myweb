@@ -1,14 +1,7 @@
 {
   "version": 2,
-  "name": "eclips-logic-app",
-  "functions": {
-    "api/index.js": {
-      "memory": 128,
-      "maxDuration": 60
-    }
-  },
+  "name": "core-logic-service",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
-  ],
-  "trailingSlash": false
+  ]
 }
