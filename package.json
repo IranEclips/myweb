@@ -1,9 +1,9 @@
 {
-  "name": "edge-traffic-optimizer",
-  "version": "1.0.0",
+  "name": "iraneclips-official-web",
+  "version": "2.0.1",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo build complete"
+    "build": "echo 'Optimization complete'"
   }
 }
