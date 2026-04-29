@@ -1,11 +1,15 @@
-# Eclips Edge Logic
+# OpenEdge Performance Toolkit
 
-این یک پروژه آزمایشی برای بررسی قدرت پردازش در لبه (Edge Computing) و مدیریت درخواست‌های شبکه است.
+A specialized research project focused on benchmarking Edge Runtime capabilities and HTTP header propagation efficiency within distributed networks.
 
-### اهداف پروژه:
-- بررسی پرفورمنس متد GETX در محیط Vercel Edge.
-- مدیریت هوشمند هدرهای HTTP.
-- بهینه‌سازی مسیردهی برای پروژه‌های توزیع شده.
+## Core Features
+- **Edge-Level Processing**: Leveraging Vercel Edge functions for low-latency request handling.
+- **Header Optimization**: Advanced logic for stripping and re-mapping inbound/outbound HTTP headers.
+- **Routing Engine**: Intelligent path-based routing for microservices.
 
-📌 برای راهنمایی بیشتر و ارتباط با تیم توسعه، به کانال تلگرام ما سر بزنید.
-📢 [ارتباط با ما](https://t.me/IranEclip)
+## Project Structure
+- `/api`: Contains the core logic for the request lifecycle.
+- `vercel.json`: Configuration for routing and environment-specific rewrites.
+
+## Technical Goals
+The primary goal is to measure the overhead of dynamic fetching at the edge and improve the reliability of upstream communication.
